@@ -1,4 +1,5 @@
 module validator
+
 /*
 interface IError {
 	code() int
@@ -15,22 +16,22 @@ pub enum FieldErrorEnum {
 }
 
 struct FieldError {
-	int_code FieldErrorEnum
+	int_code    FieldErrorEnum
 	int_message string
 }
 
 fn (err FieldError) code() int {
 	return int(err.int_code)
-} 
+}
 
 fn (err FieldError) msg() string {
 	return err.int_message
 }
 
 [inline]
-fn error(code FieldErrorEnum, msg string) FieldError{
+fn error(code FieldErrorEnum, msg string) FieldError {
 	return FieldError{
-		int_code: code,
+		int_code: code
 		int_message: msg
 	}
 }
@@ -40,22 +41,22 @@ type TransformAndValidateRet[T] = T | map[string][]IError
 
 pub fn transform_and_validate[T](data map[string]string) TransformAndValidateRet[T] {
 	new_config := T{}
-	mut errors := map[string][]IError {}
+	mut errors := map[string][]IError{}
 	$for field in T.fields {
 		$if field.typ is string {
 			raw_data := get_string(data, field.name, new_config.$(field.name))
-			data_or_errors := validate_string(raw_data, field.attrs) 
+			data_or_errors := validate_string(raw_data, field.attrs)
 			if data_or_errors is string {
 				new_config.$(field.name) = data_or_errors
-			} else if data_or_errors is []IError{
+			} else if data_or_errors is []IError {
 				errors[field.name] = data_or_errors
 			}
 		} $else $if field.typ is int {
 			raw_data := get_int(data, field.name, new_config.$(field.name))
-			data_or_errors := validate_int(raw_data, field.attrs) 
+			data_or_errors := validate_int(raw_data, field.attrs)
 			if data_or_errors is int {
 				new_config.$(field.name) = data_or_errors
-			} else if data_or_errors is []IError{
+			} else if data_or_errors is []IError {
 				errors[field.name] = data_or_errors
 			}
 		} $else $if field.typ is bool {
@@ -66,7 +67,7 @@ pub fn transform_and_validate[T](data map[string]string) TransformAndValidateRet
 			}
 		}
 	}
-	if errors.keys().len>0{
+	if errors.keys().len > 0 {
 		return errors
 	}
 	return new_config
@@ -77,28 +78,25 @@ fn check_required[T](data ?T, attrs []string, def T) !T {
 	if d := data {
 		return d
 	} else {
-		if 'req' in attrs{
-			return error(
-				 .required,
-				'Field is required'
-			)
+		if 'req' in attrs {
+			return error(.required, 'Field is required')
 		} else {
 			return def
 		}
 	}
 }
 
-fn validate_string(data ?string, attrs []string) ValidateRet[string]{
-	str := check_required(data, attrs, '') or { return [err]}
+fn validate_string(data ?string, attrs []string) ValidateRet[string] {
+	str := check_required(data, attrs, '') or { return [err] }
 	mut errors := []IError{}
 	for attr in attrs {
-		if validator := parse_string_attr[string](attr){
-			if error := validator(str){
+		if validator := parse_string_attr[string](attr) {
+			if error := validator(str) {
 				errors << error
 			}
 		}
 	}
-	if errors.len>0{
+	if errors.len > 0 {
 		return errors
 	}
 
@@ -106,16 +104,16 @@ fn validate_string(data ?string, attrs []string) ValidateRet[string]{
 }
 
 fn validate_int(data ?int, attrs []string) ValidateRet[int] {
-	number := check_required(data, attrs, 0) or { return [err]}
+	number := check_required(data, attrs, 0) or { return [err] }
 	mut errors := []IError{}
 	for attr in attrs {
-		if validator := parse_number_attr[int](attr){
-			if error := validator(number){
+		if validator := parse_number_attr[int](attr) {
+			if error := validator(number) {
 				errors << error
 			}
 		}
 	}
-	if errors.len>0{
+	if errors.len > 0 {
 		return errors
 	}
 
@@ -126,12 +124,12 @@ fn validate_bool(data ?bool, attrs []string) !bool {
 	return check_required(data, attrs, false)
 }
 
-fn get_string(data map[string]string, field_name string,  original ?string) ?string {
+fn get_string(data map[string]string, field_name string, original ?string) ?string {
 	var_name := field_name
 	if var_name in data {
 		return data[var_name]
 	}
-	if original? != ''{
+	if original? != '' {
 		return original
 	} else {
 		return none
@@ -142,7 +140,7 @@ fn get_int(data map[string]string, field string, original ?int) ?int {
 	if str := get_string(data, field, none) {
 		return str.trim(' ').int()
 	}
-	if original? != 0{
+	if original? != 0 {
 		return original
 	} else {
 		return none
