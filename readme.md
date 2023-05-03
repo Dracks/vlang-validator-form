@@ -16,14 +16,43 @@ data := validator.transform_and_validate[BasicObject]({
     "str": "Hello world!"
     "number": "42"
 })
+your_basic_object := data.value
 
-if data is BasicObject{
-    // process the data as basic object
+
+if data.has_errors() {
+    // you can get the errors from data.errors
+    // where the key of the map is the field with error, 
+    // internally you will have a list of errors
+}
+```
+
+## Example of usage for a configuration
+```vlang
+import dracks.validator {transform_and_validate}
+
+pub struct Config {
+	debug           bool = true
+	default_locale  string = 'en_US'
+	login_demo_user bool
+	port            int = 8081
 }
 
-if data is map[string][]IError {
-    // here the key of the map is the field with error, 
-    // internally you will have a list of errors
+pub fn load_config() !Config {
+	env := os.environ()
+	transform := transform_and_validate[Config](env)
+	if transform.has_errors(){
+		errors_str := transform.errors.keys().map(fn [transform] (field string) string {
+			return '\t${field}: ${transform.errors[field]}\n'
+		})
+
+		return error('Invalid configuration\n${errors_str}')
+	}
+	return transform.value
+}
+
+
+pub fn (self Config) to_json() string {
+	return json.encode(self)
 }
 ```
 

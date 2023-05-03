@@ -1,11 +1,20 @@
 module validator
 
+pub struct ValueWithErrors[T, E] {
+pub:
+	value T
+	errors E
+}
 /*
-interface IError {
-	code() int
-	msg() string
+[inline]
+pub fn (self ValueWithErrors[T, []IError]) has_errors() bool{
+	return self.errors.len>0
 }
 */
+[inline]
+pub fn (self ValueWithErrors[T, map[string][]IError]) has_errors() bool{
+	return self.errors.len>0
+}
 
 pub enum FieldErrorEnum {
 	required
@@ -15,62 +24,41 @@ pub enum FieldErrorEnum {
 	max
 }
 
-struct FieldError {
-	int_code    FieldErrorEnum
-	int_message string
-}
 
-fn (err FieldError) code() int {
-	return int(err.int_code)
-}
+// type ValidateRet[T] = ValueWithErrors[T, []IError]
+// type TransformAndValidateRet[T] = T | ValueWithErrors[T, map[string][]IError]
 
-fn (err FieldError) msg() string {
-	return err.int_message
-}
-
-[inline]
-fn error(code FieldErrorEnum, msg string) FieldError {
-	return FieldError{
-		int_code: code
-		int_message: msg
-	}
-}
-
-type ValidateRet[T] = T | []IError
-type TransformAndValidateRet[T] = T | map[string][]IError
-
-pub fn transform_and_validate[T](data map[string]string) TransformAndValidateRet[T] {
-	new_config := T{}
+pub fn transform_and_validate[T](data map[string]string) ValueWithErrors[T, map[string][]IError] {
+	new_object := T{}
 	mut errors := map[string][]IError{}
 	$for field in T.fields {
 		$if field.typ is string {
-			raw_data := get_string(data, field.name, new_config.$(field.name))
-			data_or_errors := validate_string(raw_data, field.attrs)
-			if data_or_errors is string {
-				new_config.$(field.name) = data_or_errors
-			} else if data_or_errors is []IError {
-				errors[field.name] = data_or_errors
+			raw_data := get_string(data, field.name, new_object.$(field.name))
+			data_with_errors := validate_string(raw_data, field.attrs)
+			
+			new_object.$(field.name) = data_with_errors.value
+			if data_with_errors.errors.len>0 {
+				errors[field.name] = data_with_errors.errors
 			}
 		} $else $if field.typ is int {
-			raw_data := get_int(data, field.name, new_config.$(field.name))
-			data_or_errors := validate_int(raw_data, field.attrs)
-			if data_or_errors is int {
-				new_config.$(field.name) = data_or_errors
-			} else if data_or_errors is []IError {
-				errors[field.name] = data_or_errors
+			raw_data := get_int(data, field.name, new_object.$(field.name))
+			data_with_errors := validate_int(raw_data, field.attrs)
+			new_object.$(field.name) = data_with_errors.value
+			if data_with_errors.errors.len>0 {
+				errors[field.name] = data_with_errors.errors
 			}
 		} $else $if field.typ is bool {
-			raw_data := get_bool(data, field.name, new_config.$(field.name))
-			new_config.$(field.name) = validate_bool(raw_data, field.attrs) or {
+			raw_data := get_bool(data, field.name, new_object.$(field.name))
+			new_object.$(field.name) = validate_bool(raw_data, field.attrs) or {
 				errors[field.name] = [err]
 				false
 			}
 		}
 	}
-	if errors.keys().len > 0 {
-		return errors
+	return ValueWithErrors[T, map[string][]IError]{
+		errors: errors,
+		value: new_object
 	}
-	return new_config
 }
 
 [inline]
@@ -86,8 +74,8 @@ fn check_required[T](data ?T, attrs []string, def T) !T {
 	}
 }
 
-fn validate_string(data ?string, attrs []string) ValidateRet[string] {
-	str := check_required(data, attrs, '') or { return [err] }
+fn validate_string(data ?string, attrs []string) ValueWithErrors[string, []IError] {
+	str := check_required(data, attrs, '') or { return ValueWithErrors{value: "", errors: [err]} }
 	mut errors := []IError{}
 	for attr in attrs {
 		if validator := parse_string_attr[string](attr) {
@@ -96,15 +84,14 @@ fn validate_string(data ?string, attrs []string) ValidateRet[string] {
 			}
 		}
 	}
-	if errors.len > 0 {
-		return errors
+	return ValueWithErrors{
+		value: str,
+		errors: errors
 	}
-
-	return str
 }
 
-fn validate_int(data ?int, attrs []string) ValidateRet[int] {
-	number := check_required(data, attrs, 0) or { return [err] }
+fn validate_int(data ?int, attrs []string) ValueWithErrors[int, []IError] {
+	number := check_required(data, attrs, 0) or { return ValueWithErrors[int, []IError]{errors: [err]} }
 	mut errors := []IError{}
 	for attr in attrs {
 		if validator := parse_number_attr[int](attr) {
@@ -113,11 +100,10 @@ fn validate_int(data ?int, attrs []string) ValidateRet[int] {
 			}
 		}
 	}
-	if errors.len > 0 {
-		return errors
+	return ValueWithErrors{
+		value: number,
+		errors: errors
 	}
-
-	return number
 }
 
 fn validate_bool(data ?bool, attrs []string) !bool {
