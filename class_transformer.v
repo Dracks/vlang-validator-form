@@ -29,7 +29,7 @@ pub enum FieldErrorEnum {
 // type TransformAndValidateRet[T] = T | ValueWithErrors[T, map[string][]IError]
 
 pub fn transform_and_validate[T](data map[string]string) ValueWithErrors[T, map[string][]IError] {
-	new_object := T{}
+	mut new_object := T{}
 	mut errors := map[string][]IError{}
 	$for field in T.fields {
 		$if field.typ is string {
