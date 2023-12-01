@@ -1,9 +1,9 @@
 module validator
 
 struct BasicStruct {
-	str    string [max_length: 15; min_length: 3; req]
-	number int    [max: 100; min: 3; req]
-	b      bool   [req]
+	str    string @[max_length: 15; min_length: 3; req]
+	number int    @[max: 100; min: 3; req]
+	b      bool   @[req]
 }
 
 struct DefaultsStruct {
@@ -40,9 +40,7 @@ fn test_basic_struct_without_data() {
 	if number is FieldError {
 		assert number.int_code == FieldErrorEnum.required
 	}
-	
 }
-
 
 fn test_min_length() {
 	data_with_errors := transform_and_validate[BasicStruct]({
@@ -58,14 +56,13 @@ fn test_min_length() {
 	}
 }
 
-
 fn test_max_length() {
 	data_with_errors := transform_and_validate[BasicStruct]({
 		'str':    '1234567890123456'
 		'number': '11'
 	})
 
-	assert data_with_errors.errors.len >0
+	assert data_with_errors.errors.len > 0
 	str := data_with_errors.errors['str'][0]
 	if str is FieldError {
 		assert str.int_code == .max_length
@@ -74,21 +71,19 @@ fn test_max_length() {
 	}
 }
 
-
 fn test_min_int() {
 	data_with_errors := transform_and_validate[BasicStruct]({
 		'str':    '12345'
 		'number': '0'
 	})
-	assert data_with_errors.errors.len >0
-	
+	assert data_with_errors.errors.len > 0
+
 	number := data_with_errors.errors['number'][0]
 	if number is FieldError {
 		assert number.int_code == .min
 	} else {
 		assert false, 'data is not FieldError'
 	}
-	
 }
 
 fn test_max_int() {
@@ -103,5 +98,4 @@ fn test_max_int() {
 	} else {
 		assert false, 'data is not FieldError'
 	}
-	
 }

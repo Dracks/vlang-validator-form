@@ -2,18 +2,19 @@ module validator
 
 pub struct ValueWithErrors[T, E] {
 pub:
-	value T
+	value  T
 	errors E
 }
+
 /*
 [inline]
 pub fn (self ValueWithErrors[T, []IError]) has_errors() bool{
 	return self.errors.len>0
 }
 */
-[inline]
-pub fn (self ValueWithErrors[T, map[string][]IError]) has_errors() bool{
-	return self.errors.len>0
+@[inline]
+pub fn (self ValueWithErrors[T, map[string][]IError]) has_errors() bool {
+	return self.errors.len > 0
 }
 
 pub enum FieldErrorEnum {
@@ -23,7 +24,6 @@ pub enum FieldErrorEnum {
 	min
 	max
 }
-
 
 // type ValidateRet[T] = ValueWithErrors[T, []IError]
 // type TransformAndValidateRet[T] = T | ValueWithErrors[T, map[string][]IError]
@@ -35,16 +35,16 @@ pub fn transform_and_validate[T](data map[string]string) ValueWithErrors[T, map[
 		$if field.typ is string {
 			raw_data := get_string(data, field.name, new_object.$(field.name))
 			data_with_errors := validate_string(raw_data, field.attrs)
-			
+
 			new_object.$(field.name) = data_with_errors.value
-			if data_with_errors.errors.len>0 {
+			if data_with_errors.errors.len > 0 {
 				errors[field.name] = data_with_errors.errors
 			}
 		} $else $if field.typ is int {
 			raw_data := get_int(data, field.name, new_object.$(field.name))
 			data_with_errors := validate_int(raw_data, field.attrs)
 			new_object.$(field.name) = data_with_errors.value
-			if data_with_errors.errors.len>0 {
+			if data_with_errors.errors.len > 0 {
 				errors[field.name] = data_with_errors.errors
 			}
 		} $else $if field.typ is bool {
@@ -56,12 +56,12 @@ pub fn transform_and_validate[T](data map[string]string) ValueWithErrors[T, map[
 		}
 	}
 	return ValueWithErrors[T, map[string][]IError]{
-		errors: errors,
+		errors: errors
 		value: new_object
 	}
 }
 
-[inline]
+@[inline]
 fn check_required[T](data ?T, attrs []string, def T) !T {
 	if d := data {
 		return d
@@ -75,7 +75,12 @@ fn check_required[T](data ?T, attrs []string, def T) !T {
 }
 
 fn validate_string(data ?string, attrs []string) ValueWithErrors[string, []IError] {
-	str := check_required(data, attrs, '') or { return ValueWithErrors{value: "", errors: [err]} }
+	str := check_required(data, attrs, '') or {
+		return ValueWithErrors{
+			value: ''
+			errors: [err]
+		}
+	}
 	mut errors := []IError{}
 	for attr in attrs {
 		if validator := parse_string_attr[string](attr) {
@@ -85,13 +90,17 @@ fn validate_string(data ?string, attrs []string) ValueWithErrors[string, []IErro
 		}
 	}
 	return ValueWithErrors{
-		value: str,
+		value: str
 		errors: errors
 	}
 }
 
 fn validate_int(data ?int, attrs []string) ValueWithErrors[int, []IError] {
-	number := check_required(data, attrs, 0) or { return ValueWithErrors[int, []IError]{errors: [err]} }
+	number := check_required(data, attrs, 0) or {
+		return ValueWithErrors[int, []IError]{
+			errors: [err]
+		}
+	}
 	mut errors := []IError{}
 	for attr in attrs {
 		if validator := parse_number_attr[int](attr) {
@@ -101,7 +110,7 @@ fn validate_int(data ?int, attrs []string) ValueWithErrors[int, []IError] {
 		}
 	}
 	return ValueWithErrors{
-		value: number,
+		value: number
 		errors: errors
 	}
 }

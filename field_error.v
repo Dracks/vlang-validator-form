@@ -13,7 +13,7 @@ fn (err FieldError) msg() string {
 	return err.int_message
 }
 
-[inline]
+@[inline]
 fn error(code FieldErrorEnum, msg string) FieldError {
 	return FieldError{
 		int_code: code

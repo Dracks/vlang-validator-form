@@ -6,17 +6,17 @@ type IntValidator = fn (data int) ?FieldError
 
 struct AttribHelper {
 pub:
-	key    string   [required]
-	params []string [required]
+	key    string   @[required]
+	params []string @[required]
 }
 
-[inline]
+@[inline]
 fn (attr AttribHelper) get_param(index int, err_string string) string {
 	str := attr.params[index] or { panic(err_string) }
 	return str.trim(' ')
 }
 
-[inline]
+@[inline]
 fn (attr AttribHelper) get_int_param(index int, err_string string) int {
 	str := attr.get_param(index, err_string)
 	number := str.int()
