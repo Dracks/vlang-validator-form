@@ -6,14 +6,9 @@ pub:
 	errors E
 }
 
-/*
-[inline]
-pub fn (self ValueWithErrors[T, []IError]) has_errors() bool{
-	return self.errors.len>0
-}
-*/
+
 @[inline]
-pub fn (self ValueWithErrors[T, map[string][]IError]) has_errors() bool {
+pub fn (self ValueWithErrors[T, E]) has_errors() bool {
 	return self.errors.len > 0
 }
 
