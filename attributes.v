@@ -30,7 +30,7 @@ fn (attr AttribHelper) get_int_param(index int, err_string string) int {
 fn attr_helper(attr string) AttribHelper {
 	attr_split := attr.split(':')
 	return AttribHelper{
-		key: attr_split.first()
+		key:    attr_split.first()
 		params: attr_split[1..]
 	}
 }

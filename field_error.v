@@ -16,7 +16,7 @@ fn (err FieldError) msg() string {
 @[inline]
 fn error(code FieldErrorEnum, msg string) FieldError {
 	return FieldError{
-		int_code: code
+		int_code:    code
 		int_message: msg
 	}
 }
