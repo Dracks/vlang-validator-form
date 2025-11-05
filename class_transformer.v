@@ -6,14 +6,8 @@ pub:
 	errors E
 }
 
-/*
-[inline]
-pub fn (self ValueWithErrors[T, []IError]) has_errors() bool{
-	return self.errors.len>0
-}
-*/
 @[inline]
-pub fn (self ValueWithErrors[T, map[string][]IError]) has_errors() bool {
+pub fn (self ValueWithErrors[T, E]) has_errors() bool {
 	return self.errors.len > 0
 }
 
@@ -57,7 +51,7 @@ pub fn transform_and_validate[T](data map[string]string) ValueWithErrors[T, map[
 	}
 	return ValueWithErrors[T, map[string][]IError]{
 		errors: errors
-		value: new_object
+		value:  new_object
 	}
 }
 
@@ -77,7 +71,7 @@ fn check_required[T](data ?T, attrs []string, def T) !T {
 fn validate_string(data ?string, attrs []string) ValueWithErrors[string, []IError] {
 	str := check_required(data, attrs, '') or {
 		return ValueWithErrors{
-			value: ''
+			value:  ''
 			errors: [err]
 		}
 	}
@@ -90,7 +84,7 @@ fn validate_string(data ?string, attrs []string) ValueWithErrors[string, []IErro
 		}
 	}
 	return ValueWithErrors{
-		value: str
+		value:  str
 		errors: errors
 	}
 }
@@ -110,7 +104,7 @@ fn validate_int(data ?int, attrs []string) ValueWithErrors[int, []IError] {
 		}
 	}
 	return ValueWithErrors{
-		value: number
+		value:  number
 		errors: errors
 	}
 }
